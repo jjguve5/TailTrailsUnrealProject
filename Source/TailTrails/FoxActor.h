@@ -15,8 +15,9 @@ public:
 	// Sets default values for this actor's properties
 	AFoxActor();
 
-	UPROPERTY(EditAnywhere)
-	USkeletalMeshComponent* SkeletalMesh;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Assets")
+	USkeletalMesh* FoxMeshAsset;
+	USkeletalMeshComponent* FoxMesh;
 
 protected:
 	// Called when the game starts or when spawned
@@ -30,5 +31,5 @@ public:
 	void SetMaterialByName(const FString& MaterialName);
 
 private:
-	UMaterial* GetMaterialByName(const FString& MaterialName);
+	UMaterialInterface* GetMaterialByName(const FString& MaterialName);
 };
