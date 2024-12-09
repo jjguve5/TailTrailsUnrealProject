@@ -127,11 +127,6 @@ void UAuthenticationSubsystem::GetPlayerData()
                         int32 PlayerColor = JsonObject->GetIntegerField("color");
                         OnPlayerDataReceived.Broadcast(PlayerColor);
 					}
-					else
-					{
-						// TODO:REMOVE, for debugging reasons use color as 1
-						OnPlayerDataReceived.Broadcast(1);
-					}
                 }
                 else
                 {
