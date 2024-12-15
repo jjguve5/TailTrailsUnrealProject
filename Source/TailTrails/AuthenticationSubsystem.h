@@ -33,9 +33,25 @@ public:
 	void Create(FString SteamWebTicket);
 	UFUNCTION(BlueprintCallable, Category = "Authentication")
 	void GetPlayerData();
+	UFUNCTION(BlueprintCallable, Category = "Authentication")
+	int32 GetPlayerId();
+	UFUNCTION(BlueprintCallable, Category = "Authentication")
+	void SendTokenToServer();
 
 	UPROPERTY(BlueprintAssignable, Category = "Authentication")
 	FOnPlayerDataReceived OnPlayerDataReceived;
+
+	UFUNCTION(BlueprintCallable, Category = "Editor")
+	int32 GetPlayInEditorWindowID()
+	{
+		#if WITH_EDITOR
+				return GPlayInEditorID;
+		#else
+				return -1; // Return -1 if not in the editor
+		#endif
+	}
+
+
 
 private:
 	const FString ApiBaseUrl = TEXT("http://localhost:3000/api");
@@ -43,6 +59,7 @@ private:
 	const FString CreateUrl = ApiBaseUrl + TEXT("/auth/create");
 	const FString GetPlayerDataUrl = ApiBaseUrl + TEXT("/users/steam");
 	FString AuthToken;
+	int32 PlayerId;
 
 	void HandleAuthError(int32 ErrorCode);
 };

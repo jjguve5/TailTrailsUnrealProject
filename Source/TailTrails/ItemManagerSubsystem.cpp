@@ -123,3 +123,15 @@ FItem UItemManagerSubsystem::GetItemByID(int32 ID) const
 	return FItem();
 }
 
+UMaterialInterface* UItemManagerSubsystem::GetMaterialByName(const FString& MaterialName)
+{
+	FString MaterialPath = FString::Printf(TEXT("/Game/Shared/Assets/Characters/Fox/Materials/%s.%s"), *MaterialName, *MaterialName);
+	UMaterialInterface* Material = Cast<UMaterialInterface>(StaticLoadObject(UMaterialInterface::StaticClass(), nullptr, *MaterialPath));
+
+	if (!Material)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Material %s not found! Path: %s"), *MaterialName, *MaterialPath);
+	}
+
+	return Material;
+}

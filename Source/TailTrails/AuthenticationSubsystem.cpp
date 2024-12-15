@@ -4,6 +4,8 @@
 #include "AuthenticationSubsystem.h"
 #include <Kismet/GameplayStatics.h>
 
+#include "MainGamePlayercontrollerBase.h"
+
 
 void UAuthenticationSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -68,6 +70,7 @@ void UAuthenticationSubsystem::Authenticate(FString SteamWebTicket)
                     if (HasAccount)
                     {
                         AuthToken = JsonObject->GetStringField("token");
+						PlayerId = JsonObject->GetIntegerField("id");
                         UE_LOG(LogTemp, Log, TEXT("Authentication successful. Token: %s"), *AuthToken);
                         // Proceed with game logic (e.g., storing the token, proceeding to the next step)
                         UGameplayStatics::OpenLevel(GetWorld(), "MainLogged");
@@ -138,6 +141,23 @@ void UAuthenticationSubsystem::GetPlayerData()
 				UE_LOG(LogTemp, Error, TEXT("UAuthenticationSubsystem::GetPlayerData: Request failed, Response: %s"), *Response->GetContentAsString());
 			}
 		});
+}
+
+int32 UAuthenticationSubsystem::GetPlayerId()
+{
+	return PlayerId;
+}
+
+void UAuthenticationSubsystem::SendTokenToServer()
+{
+	AMainGamePlayercontrollerBase* PlayerController = Cast<AMainGamePlayercontrollerBase>(GetWorld()->GetFirstPlayerController());
+    if (PlayerController)
+    {
+        if (!AuthToken.IsEmpty())
+        {
+            PlayerController->ServerSendPlayerToken(AuthToken);
+        }
+    }
 }
 
 void UAuthenticationSubsystem::HandleAuthError(int32 ErrorCode)

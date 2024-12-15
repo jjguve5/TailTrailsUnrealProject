@@ -57,6 +57,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FItem GetItemByID(int32 ID) const;
 
+	UFUNCTION(BlueprintCallable)
+	UMaterialInterface* GetMaterialByName(const FString& MaterialName);
+
 private:
 	TArray<FItem> Items;
 	const FString ApiBaseUrl = TEXT("http://localhost:3000/api");
