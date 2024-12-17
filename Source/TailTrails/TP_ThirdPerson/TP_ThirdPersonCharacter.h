@@ -46,6 +46,8 @@ class ATP_ThirdPersonCharacter : public ACharacter
 
 public:
 	ATP_ThirdPersonCharacter();
+
+	void HandleExistingPlayerState();
 	
 
 protected:
@@ -60,6 +62,8 @@ protected:
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void PossessedBy(AController* NewController) override;
+	virtual void OnRep_PlayerState() override;
 
 public:
 	/** Returns CameraBoom subobject **/

@@ -3,6 +3,7 @@
 
 #include "MainGamePlayerstateBase.h"
 #include "Net/UnrealNetwork.h"
+#include "MainGamePlayercontrollerBase.h"
 #include "TP_ThirdPerson/TP_ThirdPersonCharacter.h"
 
 void AMainGamePlayerstateBase::SetPlayerColorID(int32 NewColorID)
@@ -16,42 +17,32 @@ void AMainGamePlayerstateBase::SetPlayerColorID(int32 NewColorID)
 
 void AMainGamePlayerstateBase::OnRep_PlayerColorID()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Player color ID changed to %d"), PlayerColorID);
-    // Get the controlled Pawn
-    APawn* ControlledPawn = GetPawn();
-    if (!ControlledPawn)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Pawn not found, retrying!"));
-        GetWorld()->GetTimerManager().SetTimerForNextTick(this, &AMainGamePlayerstateBase::OnRep_PlayerColorID);
-        return;
-    }
+	ATP_ThirdPersonCharacter* ThirdPersonCharacter = Cast<ATP_ThirdPersonCharacter>(GetPawn());
+	if (ThirdPersonCharacter)
+	{
+		// Call the Blueprint event
+		UFunction* SetPlayerColorFunction = ThirdPersonCharacter->FindFunction(FName("SetPlayerColor"));
+		if (SetPlayerColorFunction)
+		{
+			struct FSetPlayerColorParams
+			{
+				int32 ColorId;
+			};
 
-    // Cast the Pawn to your character class
-    ATP_ThirdPersonCharacter* ThirdPersonCharacter = Cast<ATP_ThirdPersonCharacter>(ControlledPawn);
-    if (!ThirdPersonCharacter)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Pawn is not of type TP_ThirdPersonCharacter!"));
-        return;
-    }
+			FSetPlayerColorParams Params;
+			Params.ColorId = PlayerColorID;
 
-    // Call the Blueprint event
-    UFunction* SetPlayerColorFunction = ThirdPersonCharacter->FindFunction(FName("SetPlayerColor"));
-    if (SetPlayerColorFunction)
-    {
-        struct FSetPlayerColorParams
-        {
-            int32 ColorId;
-        };
-
-        FSetPlayerColorParams Params;
-        Params.ColorId = PlayerColorID;
-
-        ThirdPersonCharacter->ProcessEvent(SetPlayerColorFunction, &Params);
-    }
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("SetPlayerColor function not found on TP_ThirdPersonCharacter!"));
-    }
+			ThirdPersonCharacter->ProcessEvent(SetPlayerColorFunction, &Params);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("SetPlayerColor function not found on TP_ThirdPersonCharacter!"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Pawn is not of type TP_ThirdPersonCharacter!"));
+	}
 }
 
 void AMainGamePlayerstateBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

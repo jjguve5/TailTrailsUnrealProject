@@ -9,6 +9,22 @@
 void AMainGameGamemodeBase::PostLogin(APlayerController* NewPlayer)
 {
     Super::PostLogin(NewPlayer);
+
+    // Get all PlayerStates and send them to the new player
+    for (APlayerState* PlayerState : GameState->PlayerArray)
+    {
+        if (PlayerState != NewPlayer->PlayerState)
+        {
+            AMainGamePlayercontrollerBase* NewPlayerController = Cast<AMainGamePlayercontrollerBase>(NewPlayer);
+			AMainGamePlayerstateBase* PlayerStateBase = Cast<AMainGamePlayerstateBase>(PlayerState);
+			if (NewPlayerController && PlayerStateBase)
+            {
+                // Send PlayerState data to the new player
+				UE_LOG(LogTemp, Log, TEXT("Sending PlayerState with player color ID %d to %s"), PlayerStateBase->GetPlayerColorID(), *NewPlayerController->GetName());
+                NewPlayerController->ClientReceiveExistingPlayerState(PlayerStateBase);
+            }
+        }
+    }
 }
 
 void AMainGameGamemodeBase::StorePlayerToken(APlayerController* PlayerController, const FString& Token)
@@ -73,6 +89,7 @@ void AMainGameGamemodeBase::OnPlayerDataReceived(FHttpRequestPtr Request, FHttpR
         {
 			UE_LOG(LogTemp, Warning, TEXT("Setting color ID %d"), ColorID);
             PlayerState->SetPlayerColorID(ColorID);
+			PlayerState->ForceNetUpdate();
         }
     }
 }

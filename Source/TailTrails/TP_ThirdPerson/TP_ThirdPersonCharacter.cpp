@@ -88,6 +88,82 @@ void ATP_ThirdPersonCharacter::SetupPlayerInputComponent(UInputComponent* Player
 	}
 }
 
+void ATP_ThirdPersonCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	//if (AMainGamePlayerstateBase* MyPlayerState = Cast<AMainGamePlayerstateBase>(NewController->PlayerState))
+	//{
+	//	// Call the Blueprint event
+	//	UFunction* SetPlayerColorFunction = this->FindFunction(FName("SetPlayerColor"));
+	//	if (SetPlayerColorFunction)
+	//	{
+	//		struct FSetPlayerColorParams
+	//		{
+	//			int32 ColorId;
+	//		};
+
+	//		FSetPlayerColorParams Params;
+	//		Params.ColorId = MyPlayerState->GetPlayerColorID();
+
+	//		this->ProcessEvent(SetPlayerColorFunction, &Params);
+	//	}
+	//	else
+	//	{
+	//		UE_LOG(LogTemp, Warning, TEXT("SetPlayerColor function not found on TP_ThirdPersonCharacter!"));
+	//	}
+	//}
+	//else
+	//{
+	//	UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find a MainGamePlayerstateBase!"), *GetNameSafe(this));
+	//}
+}
+
+void ATP_ThirdPersonCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	HandleExistingPlayerState();
+}
+
+void ATP_ThirdPersonCharacter::HandleExistingPlayerState()
+{
+	// get player state
+	if (APlayerState* MyPlayerState = GetPlayerState())
+	{
+		// get player color ID
+		if (AMainGamePlayerstateBase* PlayerStateBase = Cast<AMainGamePlayerstateBase>(MyPlayerState))
+		{
+			// Call the Blueprint event
+			UFunction* SetPlayerColorFunction = this->FindFunction(FName("SetPlayerColor"));
+			if (SetPlayerColorFunction)
+			{
+				struct FSetPlayerColorParams
+				{
+					int32 ColorId;
+				};
+
+				FSetPlayerColorParams Params;
+				Params.ColorId = PlayerStateBase->GetPlayerColorID();
+
+				this->ProcessEvent(SetPlayerColorFunction, &Params);
+			}
+			else
+			{
+				UE_LOG(LogTemplateCharacter, Warning, TEXT("SetPlayerColor function not found on TP_ThirdPersonCharacter!"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find a MainGamePlayerstateBase!"), *GetNameSafe(this));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find a PlayerState!"), *GetNameSafe(this));
+	}
+}
+
 void ATP_ThirdPersonCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D

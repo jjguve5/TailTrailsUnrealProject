@@ -19,6 +19,12 @@ public:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerSendPlayerToken(const FString& Token);
 
+	UFUNCTION(Client, Reliable)
+	void ClientReceiveExistingPlayerState(AMainGamePlayerstateBase* ExistingPlayerState);
+
+	void HandleExistingPlayerStates();
+
 protected:
 	void BeginPlay() override;
+	virtual void OnRep_PlayerState() override;
 };
