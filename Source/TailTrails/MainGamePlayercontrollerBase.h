@@ -39,6 +39,9 @@ public:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerPurchaseItem(int32 ItemID);
 
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerSendChatMessage(const FString& Message);
+
 	// Function to receive items from the server
 	UFUNCTION(Client, Reliable)
 	void ClientReceivePlayerItems(const TArray<int32>& PlayerItems, const TArray<int32>& DressedItems);
@@ -54,6 +57,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Game")
 	void PurchaseItem(int32 ItemID);
+
+	UFUNCTION(BlueprintCallable, Category = "Game")
+	void SendChatMessage(const FString& Message);
+
+	UFUNCTION(Client, Reliable)
+	void ClientReceiveChatMessage(const FString& Author, const FString& Message);
 
 protected:
 	void BeginPlay() override;
@@ -80,4 +89,10 @@ private:
 	// Widget Blueprint class reference
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> CatalogWidgetClass;
+
+	UPROPERTY()
+	UUserWidget* ChatWidget; // Pointer to the Chat Widget
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> ChatWidgetClass;
 };

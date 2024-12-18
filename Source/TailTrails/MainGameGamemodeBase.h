@@ -49,4 +49,7 @@ public:
 
 	UFUNCTION()
 	void HandlePurchaseItemRequest(APlayerController* PlayerController, int32 ItemID);
+
+	UFUNCTION()
+	void HandleChatMessage(APlayerController* PlayerController, const FString& Message);
 };

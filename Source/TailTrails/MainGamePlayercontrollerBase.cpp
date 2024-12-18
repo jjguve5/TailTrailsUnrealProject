@@ -24,6 +24,25 @@ void AMainGamePlayercontrollerBase::BeginPlay()
 		{
 			AuthenticationSubsystem->SendTokenToServer();
 		}
+
+		//create chat widget
+		if (ChatWidgetClass)
+		{
+			ChatWidget = CreateWidget<UUserWidget>(this, ChatWidgetClass);
+			if (ChatWidget)
+			{
+				ChatWidget->AddToViewport();
+				UE_LOG(LogTemp, Log, TEXT("ChatWidget Created"));
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("ChatWidget is nullptr"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("ChatWidgetClass is not set in the PlayerController!"));
+		}
 	}
 }
 
@@ -292,5 +311,69 @@ void AMainGamePlayercontrollerBase::ServerUnDressItem_Implementation(int32 ItemI
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("ServerUnDressItem: GetWorld() returned nullptr"));
+	}
+}
+
+void AMainGamePlayercontrollerBase::SendChatMessage(const FString& Message)
+{
+	ServerSendChatMessage(Message);
+}
+
+bool AMainGamePlayercontrollerBase::ServerSendChatMessage_Validate(const FString& Message)
+{
+	return !Message.IsEmpty();
+}
+
+void AMainGamePlayercontrollerBase::ServerSendChatMessage_Implementation(const FString& Message)
+{
+	// Get the GameMode
+	if (GetWorld())
+	{
+		AMainGameGamemodeBase* GM = Cast<AMainGameGamemodeBase>(GetWorld()->GetAuthGameMode());
+		if (GM)
+		{
+			GM->HandleChatMessage(this, Message);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("ServerSendChatMessage: Cast to AMainGameGamemodeBase failed"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ServerSendChatMessage: GetWorld() returned nullptr"));
+	}
+}
+
+void AMainGamePlayercontrollerBase::ClientReceiveChatMessage_Implementation(const FString& Author, const FString& Message)
+{
+	// This runs on the client: display or process the received message
+	UE_LOG(LogTemp, Log, TEXT("Client Received Chat Message: %s"), *Message);
+
+	if (!ChatWidget)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ChatWidget is nullptr"));
+		return;
+	}
+
+	// Call the Blueprint event
+	UFunction* ReceiveChatMessageFunction = ChatWidget->FindFunction(FName("AddMessage"));
+	if (ReceiveChatMessageFunction)
+	{
+		struct FReceiveChatMessageParams
+		{
+			FString Author;
+			FString Content;
+		};
+
+		FReceiveChatMessageParams Params;
+		Params.Author = Author;
+		Params.Content = Message;
+
+		ChatWidget->ProcessEvent(ReceiveChatMessageFunction, &Params);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ReceiveChatMessage function not found"));
 	}
 }

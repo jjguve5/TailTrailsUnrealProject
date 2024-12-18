@@ -299,3 +299,19 @@ void AMainGameGamemodeBase::OnPurchaseItemReceived(FHttpRequestPtr Request, FHtt
 		}
 	}
 }
+
+void AMainGameGamemodeBase::HandleChatMessage(APlayerController* PlayerController, const FString& Message)
+{
+	if (!PlayerController) return;
+
+	// send the message to all clients
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		AMainGamePlayercontrollerBase* OtherPlayerController = Cast<AMainGamePlayercontrollerBase>(*It);
+		if (OtherPlayerController)
+		{
+			FString Author = PlayerController->GetPlayerState<AMainGamePlayerstateBase>()->GetPlayerName();
+			OtherPlayerController->ClientReceiveChatMessage(Author, Message);
+		}
+	}
+}
