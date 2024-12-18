@@ -263,3 +263,34 @@ void AMainGamePlayercontrollerBase::OpenCatalog()
 		}
 	}
 }
+
+void AMainGamePlayercontrollerBase::UnDressItem(int32 ItemID)
+{
+	ServerUnDressItem(ItemID);
+}
+
+bool AMainGamePlayercontrollerBase::ServerUnDressItem_Validate(int32 ItemID)
+{
+	return true;
+}
+
+void AMainGamePlayercontrollerBase::ServerUnDressItem_Implementation(int32 ItemID)
+{
+	// Get the GameMode
+	if (GetWorld())
+	{
+		AMainGameGamemodeBase* GM = Cast<AMainGameGamemodeBase>(GetWorld()->GetAuthGameMode());
+		if (GM)
+		{
+			GM->HandleUnDressItemRequest(this, ItemID);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("ServerUnDressItem: Cast to AMainGameGamemodeBase failed"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ServerUnDressItem: GetWorld() returned nullptr"));
+	}
+}

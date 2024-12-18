@@ -69,6 +69,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	UTexture2D* GetIconByItemId(int32 ID) const;
 
+	UFUNCTION(BlueprintCallable)
+	USkeletalMesh* GetMeshByItemId(int32 ID) const;
+
 private:
 	TArray<FItem> Items;
 	const FString ApiBaseUrl = TEXT("http://localhost:3000/api");

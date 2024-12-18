@@ -82,6 +82,24 @@ void AMainGameGamemodeBase::HandleDressItemRequest(APlayerController* PlayerCont
 	Request->ProcessRequest();
 }
 
+void AMainGameGamemodeBase::HandleUnDressItemRequest(APlayerController* PlayerController, int32 ItemID)
+{
+	if (!PlayerController) return;
+
+	FString* Token = PlayerTokens.Find(PlayerController);
+	if (!Token) return;
+
+	// Example HTTP request setup
+	FHttpRequestRef Request = FHttpModule::Get().CreateRequest();
+	Request->OnProcessRequestComplete().BindUObject(this, &AMainGameGamemodeBase::OnUnDressItemReceived, PlayerController, ItemID);
+	Request->SetURL(UnDressItemUrl);
+	Request->SetVerb("POST");
+	Request->SetHeader("Authorization", "Bearer " + *Token);
+	Request->SetHeader("Content-Type", "application/json");
+	Request->SetContentAsString("{\"item_id\":" + FString::FromInt(ItemID) + "}");
+	Request->ProcessRequest();
+}
+
 void AMainGameGamemodeBase::HandlePurchaseItemRequest(APlayerController* PlayerController, int32 ItemID)
 {
 	if (!PlayerController) return;
@@ -125,6 +143,10 @@ void AMainGameGamemodeBase::OnDressItemReceived(FHttpRequestPtr Request, FHttpRe
 				PlayerState->SetPlayerColorID(ItemID);
 				PlayerState->ForceNetUpdate();
 			}
+			else if (Item.Type == EItemType::Shirt) {
+				PlayerState->SetPlayerShirtID(ItemID);
+				PlayerState->ForceNetUpdate();
+			}
 			else
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Item type not supported"));
@@ -136,6 +158,45 @@ void AMainGameGamemodeBase::OnDressItemReceived(FHttpRequestPtr Request, FHttpRe
 		else
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Failed to dress item"));
+		}
+	}
+}
+
+void AMainGameGamemodeBase::OnUnDressItemReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, APlayerController* PlayerController, int32 ItemID)
+{
+	if (!bWasSuccessful || !PlayerController) return;
+
+	UE_LOG(LogTemp, Warning, TEXT("Received undress item response"));
+
+	// Parse response JSON (example using Unreal's JSON utilities)
+	FString ResponseString = Response->GetContentAsString();
+	UE_LOG(LogTemp, Warning, TEXT("Response: %s"), *ResponseString);
+	TSharedPtr<FJsonObject> JsonObject;
+	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(ResponseString);
+
+	if (FJsonSerializer::Deserialize(Reader, JsonObject) && JsonObject.IsValid())
+	{
+		bool bSuccess = JsonObject->GetBoolField("success");
+		if (bSuccess)
+		{
+			UItemManagerSubsystem* ItemManager = GetGameInstance()->GetSubsystem<UItemManagerSubsystem>();
+			FItem Item = ItemManager->GetItemByID(ItemID);
+			AMainGamePlayerstateBase* PlayerState = PlayerController->GetPlayerState<AMainGamePlayerstateBase>();
+			if (Item.Type == EItemType::Shirt) {
+				PlayerState->SetPlayerShirtID(0);
+				PlayerState->ForceNetUpdate();
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Item type not supported"));
+			}
+			//TODO: remove this and do it in a less lazy way
+			//REASON: so that the dressed items change in the inventory
+			HandleInventoryRequest(PlayerController);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Failed to undress item"));
 		}
 	}
 }
@@ -154,6 +215,7 @@ void AMainGameGamemodeBase::OnPlayerDataReceived(FHttpRequestPtr Request, FHttpR
     if (FJsonSerializer::Deserialize(Reader, JsonObject) && JsonObject.IsValid())
     {
         int32 ColorID = JsonObject->GetIntegerField("color");
+		int32 ShirtID = JsonObject->GetIntegerField("shirt");
 
         // Store the data in PlayerState
         AMainGamePlayerstateBase* PlayerState = PlayerController->GetPlayerState<AMainGamePlayerstateBase>();
@@ -161,6 +223,7 @@ void AMainGameGamemodeBase::OnPlayerDataReceived(FHttpRequestPtr Request, FHttpR
         {
 			UE_LOG(LogTemp, Warning, TEXT("Setting color ID %d"), ColorID);
             PlayerState->SetPlayerColorID(ColorID);
+			PlayerState->SetPlayerShirtID(ShirtID);
 			PlayerState->ForceNetUpdate();
         }
     }

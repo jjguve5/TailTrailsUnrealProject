@@ -22,6 +22,7 @@ private:
 	const FString GetPlayerDataUrl = ApiBaseUrl + TEXT("/users/steam");
 	const FString GetPlayerItems = ApiBaseUrl + TEXT("/items/user");
 	const FString DressItemUrl = ApiBaseUrl + TEXT("/items/dress");
+	const FString UnDressItemUrl = ApiBaseUrl + TEXT("/items/undress");
 	const FString PurchaseItemUrl = ApiBaseUrl + TEXT("/items/purchase");
 
 public:
@@ -31,6 +32,7 @@ public:
 	void OnPlayerDataReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, APlayerController* PlayerController);
 	void OnPlayerItemsReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, APlayerController* PlayerController);
 	void OnDressItemReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, APlayerController* PlayerController, int32 ItemID);
+	void OnUnDressItemReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, APlayerController* PlayerController, int32 ItemID);
 	void OnPurchaseItemReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, APlayerController* PlayerController, int32 ItemID);
 
 	UFUNCTION(BlueprintCallable, Category = "Game")
@@ -41,6 +43,9 @@ public:
 
 	UFUNCTION()
 	void HandleDressItemRequest(APlayerController* PlayerController, int32 ItemID);
+
+	UFUNCTION()
+	void HandleUnDressItemRequest(APlayerController* PlayerController, int32 ItemID);
 
 	UFUNCTION()
 	void HandlePurchaseItemRequest(APlayerController* PlayerController, int32 ItemID);

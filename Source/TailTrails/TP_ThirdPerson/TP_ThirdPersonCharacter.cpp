@@ -152,6 +152,25 @@ void ATP_ThirdPersonCharacter::HandleExistingPlayerState()
 			{
 				UE_LOG(LogTemplateCharacter, Warning, TEXT("SetPlayerColor function not found on TP_ThirdPersonCharacter!"));
 			}
+
+			// Call the Blueprint event
+			UFunction* SetPlayerShirtFunction = this->FindFunction(FName("SetPlayerShirt"));
+			if (SetPlayerShirtFunction)
+			{
+				struct FSetPlayerShirtParams
+				{
+					int32 ShirtId;
+				};
+
+				FSetPlayerShirtParams Params;
+				Params.ShirtId = PlayerStateBase->GetPlayerShirtID();
+
+				this->ProcessEvent(SetPlayerShirtFunction, &Params);
+			}
+			else
+			{
+				UE_LOG(LogTemplateCharacter, Warning, TEXT("SetPlayerShirt function not found on TP_ThirdPersonCharacter!"));
+			}
 		}
 		else
 		{

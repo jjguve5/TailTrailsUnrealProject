@@ -34,6 +34,9 @@ public:
 	void ServerDressItem(int32 ItemID);
 
 	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerUnDressItem(int32 ItemID);
+
+	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerPurchaseItem(int32 ItemID);
 
 	// Function to receive items from the server
@@ -45,6 +48,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Game")
 	void DressItem(int32 ItemID);
+
+	UFUNCTION(BlueprintCallable, Category = "Game")
+	void UnDressItem(int32 ItemID);
 
 	UFUNCTION(BlueprintCallable, Category = "Game")
 	void PurchaseItem(int32 ItemID);

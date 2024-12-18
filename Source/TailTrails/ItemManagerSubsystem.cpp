@@ -157,3 +157,26 @@ UTexture2D* UItemManagerSubsystem::GetIconByItemId(int32 ID) const
 
 	return Icon;
 }
+
+USkeletalMesh* UItemManagerSubsystem::GetMeshByItemId(int32 ID) const
+{
+	FItem Item = GetItemByID(ID);
+	if (Item.Properties.Contains("Mesh"))
+	{
+		FString MeshName = Item.Properties["Mesh"];
+		FString MeshPath = FString::Printf(TEXT("/Game/Shared/Assets/Clothes/Meshes/%s.%s"), *MeshName, *MeshName);
+		USkeletalMesh* Mesh = Cast<USkeletalMesh>(StaticLoadObject(USkeletalMesh::StaticClass(), nullptr, *MeshPath));
+
+		if (!Mesh)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Mesh %s not found! Path: %s"), *MeshName, *MeshPath);
+		}
+
+		return Mesh;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UItemManagerSubsystem::GetMeshByItemId: Mesh property not found for item with ID %d"), ID);
+		return nullptr;
+	}
+}

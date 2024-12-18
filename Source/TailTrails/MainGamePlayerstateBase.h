@@ -18,6 +18,9 @@ private:
     UPROPERTY(ReplicatedUsing = OnRep_PlayerColorID)
     int32 PlayerColorID;
 
+	UPROPERTY(ReplicatedUsing = OnRep_PlayerShirtID)
+	int32 PlayerShirtID;
+
 public:
     void SetPlayerColorID(int32 NewColorID);
 
@@ -26,4 +29,12 @@ public:
 
 	UFUNCTION()
 	void OnRep_PlayerColorID();
+
+	void SetPlayerShirtID(int32 NewShirtID);
+
+	UFUNCTION(BlueprintCallable)
+	int32 GetPlayerShirtID() const { return PlayerShirtID; }
+
+	UFUNCTION()
+	void OnRep_PlayerShirtID();
 };
