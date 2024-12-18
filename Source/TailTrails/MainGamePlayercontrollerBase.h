@@ -38,7 +38,7 @@ public:
 
 	// Function to receive items from the server
 	UFUNCTION(Client, Reliable)
-	void ClientReceivePlayerItems(const TArray<int32>& PlayerItems);
+	void ClientReceivePlayerItems(const TArray<int32>& PlayerItems, const TArray<int32>& DressedItems);
 
 	UFUNCTION(BlueprintCallable, Category = "Game")
 	void RequestInventory();

@@ -117,7 +117,7 @@ void AMainGamePlayercontrollerBase::ServerRequestInventory_Implementation()
 	}
 }
 
-void AMainGamePlayercontrollerBase::ClientReceivePlayerItems_Implementation(const TArray<int32>& PlayerItems)
+void AMainGamePlayercontrollerBase::ClientReceivePlayerItems_Implementation(const TArray<int32>& PlayerItems, const TArray<int32>& DressedItems)
 {
     // This runs on the client: display or process the received items
     UE_LOG(LogTemp, Log, TEXT("Client Received Items:"));
@@ -139,10 +139,12 @@ void AMainGamePlayercontrollerBase::ClientReceivePlayerItems_Implementation(cons
 		struct FSetInventoryItemsParams
 		{
 			TArray<int32> Items;
+			TArray<int32> DressedItems;
 		};
 
 		FSetInventoryItemsParams Params;
 		Params.Items = PlayerItems;
+		Params.DressedItems = DressedItems;
 
 		InventoryWidget->ProcessEvent(SetInventoryItemsFunction, &Params);
 	}

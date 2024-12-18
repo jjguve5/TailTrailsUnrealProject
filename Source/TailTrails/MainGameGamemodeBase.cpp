@@ -129,6 +129,9 @@ void AMainGameGamemodeBase::OnDressItemReceived(FHttpRequestPtr Request, FHttpRe
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Item type not supported"));
 			}
+			//TODO: remove this and do it in a less lazy way
+			//REASON: so that the dressed items change in the inventory
+			HandleInventoryRequest(PlayerController);
 		}
 		else
 		{
@@ -188,11 +191,22 @@ void AMainGameGamemodeBase::OnPlayerItemsReceived(FHttpRequestPtr Request, FHttp
 			}
 		}
 
+		TArray<int32> DressedItems;
+		const TArray<TSharedPtr<FJsonValue>>* DressedItemsArray;
+		if (JsonObject->TryGetArrayField("dressed_items", DressedItemsArray))
+		{
+			for (const TSharedPtr<FJsonValue>& ItemValue : *DressedItemsArray)
+			{
+				int32 ItemID = ItemValue->AsNumber();
+				DressedItems.Add(ItemID);
+			}
+		}
+
 		// Send the items to the player controller
 		AMainGamePlayercontrollerBase* PlayerControllerBase = Cast<AMainGamePlayercontrollerBase>(PlayerController);
 		if (PlayerControllerBase)
 		{
-			PlayerControllerBase->ClientReceivePlayerItems(PlayerItems);
+			PlayerControllerBase->ClientReceivePlayerItems(PlayerItems,DressedItems);
 		}
 	}
 }
