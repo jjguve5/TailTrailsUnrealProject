@@ -61,6 +61,8 @@ void UItemManagerSubsystem::LoadItems()
 						Item.ID = ItemObject->GetIntegerField("id");
 						Item.Name = ItemObject->GetStringField("name");
 						Item.Type = (EItemType)ItemObject->GetIntegerField("type");
+						Item.Cost = ItemObject->GetIntegerField("cost");
+						Item.Icon = ItemObject->GetStringField("icon");
 
 						//properties is a json like this for colors for example '{"Color": "(R=1, G=0.5, B=0, A=1)", "Material": "Orange"}'
 						FString PropertiesString = ItemObject->GetStringField("properties");
@@ -134,4 +136,24 @@ UMaterialInterface* UItemManagerSubsystem::GetMaterialByName(const FString& Mate
 	}
 
 	return Material;
+}
+
+UTexture2D* UItemManagerSubsystem::GetIconByItemId(int32 ID) const
+{
+	FItem Item = GetItemByID(ID);
+	if (Item.Icon.IsEmpty())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UItemManagerSubsystem::GetIconByItemId: Icon is empty for item with ID %d"), ID);
+		return nullptr;
+	}
+
+	FString IconPath = FString::Printf(TEXT("/Game/Shared/Assets/Clothes/Icons/%s.%s"), *Item.Icon, *Item.Icon);
+	UTexture2D* Icon = Cast<UTexture2D>(StaticLoadObject(UTexture2D::StaticClass(), nullptr, *IconPath));
+
+	if (!Icon)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Icon %s not found! Path: %s"), *Item.Icon, *IconPath);
+	}
+
+	return Icon;
 }

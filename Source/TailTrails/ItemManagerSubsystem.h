@@ -32,6 +32,12 @@ struct FItem
 	EItemType Type;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	int32 Cost;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	FString Icon;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TMap<FString, FString> Properties;
 };
 
@@ -59,6 +65,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	UMaterialInterface* GetMaterialByName(const FString& MaterialName);
+
+	UFUNCTION(BlueprintCallable)
+	UTexture2D* GetIconByItemId(int32 ID) const;
 
 private:
 	TArray<FItem> Items;

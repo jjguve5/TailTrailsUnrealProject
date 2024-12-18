@@ -9,45 +9,6 @@
 #include "AuthenticationSubsystem.h"
 #include "TP_ThirdPerson/TP_ThirdPersonCharacter.h"
 
-void AMainGamePlayercontrollerBase::ClientReceiveExistingPlayerState_Implementation(AMainGamePlayerstateBase* ExistingPlayerState)
-{
- //   if (ExistingPlayerState)
- //   {
- //       UE_LOG(LogTemp, Log, TEXT("Received PlayerState: %s"), *ExistingPlayerState->GetName());
-
-	//	ATP_ThirdPersonCharacter* ThirdPersonCharacter = Cast<ATP_ThirdPersonCharacter>(ExistingPlayerState->GetPawn());
-	//	if (ThirdPersonCharacter)
-	//	{
-	//		// Call the Blueprint event
-	//		UFunction* SetPlayerColorFunction = ThirdPersonCharacter->FindFunction(FName("SetPlayerColor"));
-	//		if (SetPlayerColorFunction)
-	//		{
-	//			struct FSetPlayerColorParams
-	//			{
-	//				int32 ColorId;
-	//			};
-
-	//			FSetPlayerColorParams Params;
-	//			Params.ColorId = ExistingPlayerState->GetPlayerColorID();
-
-	//			ThirdPersonCharacter->ProcessEvent(SetPlayerColorFunction, &Params);
-	//		}
-	//		else
-	//		{
-	//			UE_LOG(LogTemp, Warning, TEXT("SetPlayerColor function not found on TP_ThirdPersonCharacter!"));
-	//		}
-	//	}
-	//	else
-	//	{
-	//		UE_LOG(LogTemp, Warning, TEXT("Pawn is not of type TP_ThirdPersonCharacter!"));
-	//	}
-	//}
-	//else
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("Received NULL PlayerState"));
-	//}
-}
-
 void AMainGamePlayercontrollerBase::BeginPlay()
 {
 	Super::BeginPlay();
@@ -66,60 +27,54 @@ void AMainGamePlayercontrollerBase::BeginPlay()
 	}
 }
 
-void AMainGamePlayercontrollerBase::OnRep_PlayerState()
+void AMainGamePlayercontrollerBase::SetupInputComponent()
 {
-	Super::OnRep_PlayerState();
+	Super::SetupInputComponent();
 
-	if (!IsLocalPlayerController()) return;
-
-	if (PlayerState)
-	{
-		UE_LOG(LogTemp, Log, TEXT("PlayerState is now replicated: %s"), *PlayerState->GetName());
-
-		// Process PlayerState now that it's valid
-		HandleExistingPlayerStates();
-	}
-	else {
-		UE_LOG(LogTemp, Warning, TEXT("PlayerState is NULL, cum catano"));
-	}
+	InputComponent->BindAction("OpenInventory", IE_Pressed, this, &AMainGamePlayercontrollerBase::OpenInventory);
+	InputComponent->BindAction("OpenCatalog", IE_Pressed, this, &AMainGamePlayercontrollerBase::OpenCatalog);
 }
 
-void AMainGamePlayercontrollerBase::HandleExistingPlayerStates()
+void AMainGamePlayercontrollerBase::OpenInventory()
 {
-	//// Get all PlayerStates and send them to the new player
-	//for (APlayerState* MyPlayerState : GetWorld()->GetGameState()->PlayerArray)
-	//{
-	//	if (MyPlayerState != PlayerState)
-	//	{
-	//		ATP_ThirdPersonCharacter* ThirdPersonCharacter = Cast<ATP_ThirdPersonCharacter>(MyPlayerState->GetPawn());
-	//		AMainGamePlayerstateBase* PlayerStateBase = Cast<AMainGamePlayerstateBase>(MyPlayerState);
-	//		if (ThirdPersonCharacter)
-	//		{
-	//			// Call the Blueprint event
-	//			UFunction* SetPlayerColorFunction = ThirdPersonCharacter->FindFunction(FName("SetPlayerColor"));
-	//			if (SetPlayerColorFunction)
-	//			{
-	//				struct FSetPlayerColorParams
-	//				{
-	//					int32 ColorId;
-	//				};
+    if (!bIsInventoryOpen)
+    {
+        if (InventoryWidgetClass)
+        {
+            if (!InventoryWidget)
+            {
+                // Cria o widget se ele ainda não existir
+                InventoryWidget = CreateWidget<UUserWidget>(this, InventoryWidgetClass);
+            }
 
-	//				FSetPlayerColorParams Params;
-	//				Params.ColorId = PlayerStateBase->GetPlayerColorID();
+            if (InventoryWidget)
+            {
+                InventoryWidget->AddToViewport();
+                UE_LOG(LogTemp, Log, TEXT("Inventario Aberto"));
 
-	//				ThirdPersonCharacter->ProcessEvent(SetPlayerColorFunction, &Params);
-	//			}
-	//			else
-	//			{
-	//				UE_LOG(LogTemp, Warning, TEXT("SetPlayerColor function not found on TP_ThirdPersonCharacter!"));
-	//			}
-	//		}
-	//		else
-	//		{
-	//			UE_LOG(LogTemp, Warning, TEXT("Pawn is not of type TP_ThirdPersonCharacter!"));
-	//		}
-	//	}
-	//}
+                bIsInventoryOpen = true;
+                SetInputMode(FInputModeUIOnly()); // Mudar para input UI
+                bShowMouseCursor = true;
+            }
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("InventoryWidgetClass is not set in the PlayerController!"));
+        }
+    }
+}
+
+void AMainGamePlayercontrollerBase::CloseInventory()
+{
+    if (bIsInventoryOpen && InventoryWidget)
+    {
+        InventoryWidget->RemoveFromViewport();
+        UE_LOG(LogTemp, Log, TEXT("Inventario Fechado"));
+
+        bIsInventoryOpen = false;
+        SetInputMode(FInputModeGameOnly()); // Voltar ao input do jogo
+        bShowMouseCursor = false;
+    }
 }
 
 void AMainGamePlayercontrollerBase::ServerSendPlayerToken_Implementation(const FString& Token)
@@ -134,4 +89,175 @@ void AMainGamePlayercontrollerBase::ServerSendPlayerToken_Implementation(const F
 bool AMainGamePlayercontrollerBase::ServerSendPlayerToken_Validate(const FString& Token)
 {
     return !Token.IsEmpty();
+}
+
+bool AMainGamePlayercontrollerBase::ServerRequestInventory_Validate()
+{
+    return true; // Optional: Add validation logic
+}
+
+void AMainGamePlayercontrollerBase::ServerRequestInventory_Implementation()
+{
+    // Get the GameMode
+    if (GetWorld())
+    {
+        AMainGameGamemodeBase* GM = Cast<AMainGameGamemodeBase>(GetWorld()->GetAuthGameMode());
+        if (GM)
+        {
+            GM->HandleInventoryRequest(this);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("ServerRequestInventory: Cast to AMainGameGamemodeBase failed"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ServerRequestInventory: GetWorld() returned nullptr"));
+	}
+}
+
+void AMainGamePlayercontrollerBase::ClientReceivePlayerItems_Implementation(const TArray<int32>& PlayerItems)
+{
+    // This runs on the client: display or process the received items
+    UE_LOG(LogTemp, Log, TEXT("Client Received Items:"));
+	for (int32 ItemID : PlayerItems)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Item ID: %d"), ItemID);
+	}
+
+	if (!InventoryWidget)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("InventoryWidget is nullptr"));
+		return;
+	}
+
+	// Call the Blueprint event
+	UFunction* SetInventoryItemsFunction = InventoryWidget->FindFunction(FName("SetInventoryItems"));
+	if (SetInventoryItemsFunction)
+	{
+		struct FSetInventoryItemsParams
+		{
+			TArray<int32> Items;
+		};
+
+		FSetInventoryItemsParams Params;
+		Params.Items = PlayerItems;
+
+		InventoryWidget->ProcessEvent(SetInventoryItemsFunction, &Params);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SetInventoryItems function not found"));
+	}
+}
+
+void AMainGamePlayercontrollerBase::RequestInventory()
+{
+	// Send an RPC to the server to request the inventory
+	ServerRequestInventory();
+}
+
+void AMainGamePlayercontrollerBase::DressItem(int32 ItemID)
+{
+	ServerDressItem(ItemID);
+}
+
+bool AMainGamePlayercontrollerBase::ServerDressItem_Validate(int32 ItemID)
+{
+	return true;
+}
+
+void AMainGamePlayercontrollerBase::ServerDressItem_Implementation(int32 ItemID)
+{
+	// Get the GameMode
+	if (GetWorld())
+	{
+		AMainGameGamemodeBase* GM = Cast<AMainGameGamemodeBase>(GetWorld()->GetAuthGameMode());
+		if (GM)
+		{
+			GM->HandleDressItemRequest(this, ItemID);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("ServerDressItem: Cast to AMainGameGamemodeBase failed"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ServerDressItem: GetWorld() returned nullptr"));
+	}
+}
+
+void AMainGamePlayercontrollerBase::PurchaseItem(int32 ItemID)
+{
+	ServerPurchaseItem(ItemID);
+}
+
+bool AMainGamePlayercontrollerBase::ServerPurchaseItem_Validate(int32 ItemID)
+{
+	return true;
+}
+
+void AMainGamePlayercontrollerBase::ServerPurchaseItem_Implementation(int32 ItemID)
+{
+	// Get the GameMode
+	if (GetWorld())
+	{
+		AMainGameGamemodeBase* GM = Cast<AMainGameGamemodeBase>(GetWorld()->GetAuthGameMode());
+		if (GM)
+		{
+			GM->HandlePurchaseItemRequest(this, ItemID);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("ServerPurchaseItem: Cast to AMainGameGamemodeBase failed"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ServerPurchaseItem: GetWorld() returned nullptr"));
+	}
+}
+
+void AMainGamePlayercontrollerBase::CloseCatalog()
+{
+	if (bIsCatalogOpen && CatalogWidget)
+	{
+		CatalogWidget->RemoveFromViewport();
+		UE_LOG(LogTemp, Log, TEXT("Catalogo Fechado"));
+
+		bIsCatalogOpen = false;
+		SetInputMode(FInputModeGameOnly()); // Voltar ao input do jogo
+		bShowMouseCursor = false;
+	}
+}
+
+void AMainGamePlayercontrollerBase::OpenCatalog()
+{
+	if (!bIsCatalogOpen)
+	{
+		if (CatalogWidgetClass)
+		{
+			if (!CatalogWidget)
+			{
+				// Cria o widget se ele ainda não existir
+				CatalogWidget = CreateWidget<UUserWidget>(this, CatalogWidgetClass);
+			}
+
+			if (CatalogWidget)
+			{
+				CatalogWidget->AddToViewport();
+				UE_LOG(LogTemp, Log, TEXT("Catalogo Aberto"));
+
+				bIsCatalogOpen = true;
+				SetInputMode(FInputModeUIOnly()); // Mudar para input UI
+				bShowMouseCursor = true;
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("CatalogWidgetClass is not set in the PlayerController!"));
+		}
+	}
 }
