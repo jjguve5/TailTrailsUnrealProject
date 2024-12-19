@@ -9,7 +9,19 @@
 #include "JsonUtilities.h"
 #include "AuthenticationSubsystem.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerDataReceived, int32, PlayerColor);
+USTRUCT(BlueprintType)
+struct FPlayerData
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	int32 color;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	int32 shirt;
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerDataReceived, FPlayerData, PlayerData);
 
 /**
  * 

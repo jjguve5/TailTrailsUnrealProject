@@ -127,8 +127,10 @@ void UAuthenticationSubsystem::GetPlayerData()
                 {
                     if (JsonObject->GetIntegerField("color"))
                     {
-                        int32 PlayerColor = JsonObject->GetIntegerField("color");
-                        OnPlayerDataReceived.Broadcast(PlayerColor);
+						FPlayerData PlayerData;
+						PlayerData.color = JsonObject->GetIntegerField("color");
+						PlayerData.shirt = JsonObject->GetIntegerField("shirt");
+                        OnPlayerDataReceived.Broadcast(PlayerData);
 					}
                 }
                 else
