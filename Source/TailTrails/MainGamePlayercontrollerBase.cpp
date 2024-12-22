@@ -7,6 +7,8 @@
 #include "MainGamePlayerstateBase.h"
 #include "GameFramework/GameStateBase.h"
 #include "AuthenticationSubsystem.h"
+#include "MinigameHandlerSubsystem.h"
+#include "Kismet/GameplayStatics.h"
 #include "TP_ThirdPerson/TP_ThirdPersonCharacter.h"
 
 void AMainGamePlayercontrollerBase::BeginPlay()
@@ -52,6 +54,7 @@ void AMainGamePlayercontrollerBase::SetupInputComponent()
 
 	InputComponent->BindAction("OpenInventory", IE_Pressed, this, &AMainGamePlayercontrollerBase::OpenInventory);
 	InputComponent->BindAction("OpenCatalog", IE_Pressed, this, &AMainGamePlayercontrollerBase::OpenCatalog);
+	InputComponent->BindAction("JoinMinigame", IE_Pressed, this, &AMainGamePlayercontrollerBase::JoinMinigame);
 }
 
 void AMainGamePlayercontrollerBase::OpenInventory()
@@ -283,6 +286,28 @@ void AMainGamePlayercontrollerBase::OpenCatalog()
 	}
 }
 
+void AMainGamePlayercontrollerBase::JoinMinigame()
+{
+	if (bIsMinigamePromptOpen && !CurrentMinigamePromptName.IsEmpty())
+	{
+		// set current joining minigame name in gameinstance
+		UMinigameHandlerSubsystem* MinigameHandlerSubsystem = GetGameInstance()->GetSubsystem<UMinigameHandlerSubsystem>();
+
+		if (MinigameHandlerSubsystem)
+		{
+			MinigameHandlerSubsystem->JoinMinigameLobby(CurrentMinigamePromptName);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("MinigameHandlerSubsystem is nullptr"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("MinigamePrompt is not open or CurrentMinigamePromptName is empty"));
+	}
+}
+
 void AMainGamePlayercontrollerBase::UnDressItem(int32 ItemID)
 {
 	ServerUnDressItem(ItemID);
@@ -317,6 +342,47 @@ void AMainGamePlayercontrollerBase::ServerUnDressItem_Implementation(int32 ItemI
 void AMainGamePlayercontrollerBase::SendChatMessage(const FString& Message)
 {
 	ServerSendChatMessage(Message);
+}
+
+void AMainGamePlayercontrollerBase::OpenMinigamePrompt(const FString& MinigameName)
+{
+	if (bIsMinigamePromptOpen)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Minigame Prompt is already open"));
+		return;
+	}
+
+	if (!MinigamePromptWidgetClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("MinigamePromptWidgetClass is not set in the PlayerController!"));
+		return;
+	}
+
+	MinigamePromptWidget = CreateWidget<UUserWidget>(this, MinigamePromptWidgetClass);
+	if (!MinigamePromptWidget)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("MinigamePromptWidget is nullptr"));
+		return;
+	}
+
+	MinigamePromptWidget->AddToViewport();
+	bIsMinigamePromptOpen = true;
+	CurrentMinigamePromptName = MinigameName;
+}
+
+void AMainGamePlayercontrollerBase::CloseMinigamePrompt()
+{
+	if (!bIsMinigamePromptOpen)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Minigame Prompt is already closed"));
+		return;
+	}
+
+	if (MinigamePromptWidget)
+	{
+		MinigamePromptWidget->RemoveFromViewport();
+		bIsMinigamePromptOpen = false;
+	}
 }
 
 bool AMainGamePlayercontrollerBase::ServerSendChatMessage_Validate(const FString& Message)

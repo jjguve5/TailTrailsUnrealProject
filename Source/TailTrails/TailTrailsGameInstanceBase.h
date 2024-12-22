@@ -15,6 +15,4 @@ class TAILTRAILS_API UTailTrailsGameInstanceBase : public UGameInstance
 	GENERATED_BODY()
 	
 	
-	
-	
 };

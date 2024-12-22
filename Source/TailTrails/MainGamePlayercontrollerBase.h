@@ -64,6 +64,12 @@ public:
 	UFUNCTION(Client, Reliable)
 	void ClientReceiveChatMessage(const FString& Author, const FString& Message);
 
+	UFUNCTION(BlueprintCallable, Category = "Game")
+	void OpenMinigamePrompt(const FString& MinigameName);
+
+	UFUNCTION(BlueprintCallable, Category = "Game")
+	void CloseMinigamePrompt();
+
 protected:
 	void BeginPlay() override;
 	virtual void SetupInputComponent() override;
@@ -71,6 +77,7 @@ protected:
 private:
 	void OpenInventory();
 	void OpenCatalog();
+	void JoinMinigame();
 
 	bool bIsInventoryOpen = false;
 
@@ -95,4 +102,14 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> ChatWidgetClass;
+
+	bool bIsMinigamePromptOpen = false;
+
+	FString CurrentMinigamePromptName;
+
+	UPROPERTY()
+	UUserWidget* MinigamePromptWidget;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> MinigamePromptWidgetClass;
 };
