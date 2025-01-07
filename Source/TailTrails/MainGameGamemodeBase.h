@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "http.h"
+#include "Http.h"
 #include "MainGameGamemodeBase.generated.h"
 
 /**
@@ -18,7 +18,7 @@ class TAILTRAILS_API AMainGameGamemodeBase : public AGameModeBase
 private:
 	TMap<APlayerController*, FString> PlayerTokens;
 
-	const FString ApiBaseUrl = TEXT("http://localhost:3000/api");
+	const FString ApiBaseUrl = TEXT("http://198.7.113.75:3000/api");
 	const FString GetPlayerDataUrl = ApiBaseUrl + TEXT("/users/steam");
 	const FString GetPlayerItems = ApiBaseUrl + TEXT("/items/user");
 	const FString DressItemUrl = ApiBaseUrl + TEXT("/items/dress");

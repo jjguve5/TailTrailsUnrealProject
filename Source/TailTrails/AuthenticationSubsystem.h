@@ -21,7 +21,7 @@ struct FPlayerData
 	int32 shirt;
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerDataReceived, FPlayerData, PlayerData);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerDataReceived, FPlayerData, LoggedPlayerData);
 
 /**
  * 
@@ -42,7 +42,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Authentication")
 	void Authenticate(FString SteamWebTicket);
 	UFUNCTION(BlueprintCallable, Category = "Authentication")
-	void Create(FString SteamWebTicket);
+	void Create(FString SteamWebTicket, int32 Color);
 	UFUNCTION(BlueprintCallable, Category = "Authentication")
 	void GetPlayerData();
 	UFUNCTION(BlueprintCallable, Category = "Authentication")
@@ -66,7 +66,7 @@ public:
 
 
 private:
-	const FString ApiBaseUrl = TEXT("http://localhost:3000/api");
+	const FString ApiBaseUrl = TEXT("http://198.7.113.75:3000/api");
 	const FString AuthenticateUrl = ApiBaseUrl + TEXT("/auth/authenticate");
 	const FString CreateUrl = ApiBaseUrl + TEXT("/auth/create");
 	const FString GetPlayerDataUrl = ApiBaseUrl + TEXT("/users/steam");

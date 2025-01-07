@@ -95,17 +95,40 @@ void UAuthenticationSubsystem::Authenticate(FString SteamWebTicket)
         });
 }
 
-void UAuthenticationSubsystem::Create(FString SteamWebTicket)
+void UAuthenticationSubsystem::Create(FString SteamWebTicket, int32 Color)
 {
-	SendRequest(CreateUrl, "POST", FString::Printf(TEXT("{\"steamWebTicket\":\"%s\"}"), *SteamWebTicket), [](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+	SendRequest(CreateUrl, "POST", FString::Printf(TEXT("{\"steamWebTicket\":\"%s\",\"color\":\"%d\"}"), *SteamWebTicket, Color), [this, SteamWebTicket](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
         {
             if (bWasSuccessful)
             {
-                UE_LOG(LogTemp, Log, TEXT("UAuthenticationSubsystem::CreateAccount: Success, Response: %s"), *Response->GetContentAsString());
+                FString ResponseContent = Response->GetContentAsString();
+                TSharedPtr<FJsonObject> JsonObject;
+                TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(ResponseContent);
+
+                if (FJsonSerializer::Deserialize(Reader, JsonObject) && JsonObject.IsValid())
+                {
+                    if (JsonObject->GetBoolField("hasError"))
+                    {
+                        int32 ErrorCode = JsonObject->GetIntegerField("error");
+                        UE_LOG(LogTemp, Error, TEXT("Authentication failed. Error Code: %d"), ErrorCode);
+                        HandleAuthError(ErrorCode);
+                        return;
+                    }
+
+                    AuthToken = JsonObject->GetStringField("token");
+                    PlayerId = JsonObject->GetIntegerField("id");
+                    UE_LOG(LogTemp, Log, TEXT("Authentication successful. Token: %s"), *AuthToken);
+                    // Proceed with game logic (e.g., storing the token, proceeding to the next step)
+                    UGameplayStatics::OpenLevel(GetWorld(), "MainLogged");
+                }
+                else
+                {
+                    UE_LOG(LogTemp, Error, TEXT("Failed to parse server response: %s"), *ResponseContent);
+                }
             }
             else
             {
-                UE_LOG(LogTemp, Error, TEXT("UAuthenticationSubsystem::CreateAccount: Request failed, Response: %s"), *Response->GetContentAsString());
+                UE_LOG(LogTemp, Error, TEXT("UAuthenticationSubsystem::AuthenticateWithSteam: Request failed, Response: %s"), *Response->GetContentAsString());
             }
         });
 }

@@ -74,7 +74,7 @@ public:
 
 private:
 	TArray<FItem> Items;
-	const FString ApiBaseUrl = TEXT("http://localhost:3000/api");
+	const FString ApiBaseUrl = TEXT("http://198.7.113.75:3000/api");
 	const FString GetAllItemsUrl = ApiBaseUrl + TEXT("/items/all");
 
 	void LoadItems();
